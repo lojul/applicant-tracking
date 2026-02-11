@@ -21,6 +21,8 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -133,6 +135,23 @@ export default function Home() {
     return colors[status] || '#6b7280';
   };
 
+  const filteredApplicants = applicants.filter((applicant) => {
+    // Search filter
+    const searchLower = searchTerm.toLowerCase();
+    const matchesSearch =
+      searchTerm === '' ||
+      applicant.name.toLowerCase().includes(searchLower) ||
+      applicant.email.toLowerCase().includes(searchLower) ||
+      (applicant.position?.toLowerCase().includes(searchLower) ?? false) ||
+      (applicant.phone?.toLowerCase().includes(searchLower) ?? false);
+
+    // Status filter
+    const matchesStatus =
+      statusFilter === 'all' || applicant.status === statusFilter;
+
+    return matchesSearch && matchesStatus;
+  });
+
   if (loading) {
     return (
       <div style={{ padding: '2rem', textAlign: 'center' }}>
@@ -179,6 +198,77 @@ export default function Home() {
           >
             + Add Applicant
           </button>
+        </div>
+
+        <div style={{
+          display: 'flex',
+          gap: '1rem',
+          marginBottom: '1.5rem',
+          flexWrap: 'wrap',
+        }}>
+          <div style={{ flex: '1', minWidth: '300px' }}>
+            <input
+              type="text"
+              placeholder="Search by name, email, position, or phone..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                border: '1px solid #d1d5db',
+                borderRadius: '6px',
+                fontSize: '1rem',
+              }}
+            />
+          </div>
+          <div style={{ minWidth: '200px' }}>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                border: '1px solid #d1d5db',
+                borderRadius: '6px',
+                fontSize: '1rem',
+                backgroundColor: 'white',
+              }}
+            >
+              <option value="all">All Statuses</option>
+              {STATUSES.map((status) => (
+                <option key={status} value={status}>
+                  {status.charAt(0).toUpperCase() + status.slice(1)}
+                </option>
+              ))}
+            </select>
+          </div>
+          {(searchTerm || statusFilter !== 'all') && (
+            <button
+              onClick={() => {
+                setSearchTerm('');
+                setStatusFilter('all');
+              }}
+              style={{
+                padding: '0.75rem 1rem',
+                border: '1px solid #d1d5db',
+                borderRadius: '6px',
+                backgroundColor: 'white',
+                cursor: 'pointer',
+                fontSize: '1rem',
+                color: '#6b7280',
+              }}
+            >
+              Clear Filters
+            </button>
+          )}
+        </div>
+
+        <div style={{
+          marginBottom: '1rem',
+          color: '#6b7280',
+          fontSize: '0.875rem',
+        }}>
+          Showing {filteredApplicants.length} of {applicants.length} applicant{applicants.length !== 1 ? 's' : ''}
         </div>
 
         {showForm && (
@@ -366,6 +456,31 @@ export default function Home() {
             }}>
               <p style={{ fontSize: '1.125rem' }}>No applicants yet. Add your first applicant to get started!</p>
             </div>
+          ) : filteredApplicants.length === 0 ? (
+            <div style={{
+              textAlign: 'center',
+              padding: '3rem',
+              color: '#6b7280'
+            }}>
+              <p style={{ fontSize: '1.125rem' }}>No applicants match your search criteria.</p>
+              <button
+                onClick={() => {
+                  setSearchTerm('');
+                  setStatusFilter('all');
+                }}
+                style={{
+                  marginTop: '1rem',
+                  padding: '0.5rem 1rem',
+                  backgroundColor: '#3b82f6',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                }}
+              >
+                Clear Filters
+              </button>
+            </div>
           ) : (
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
@@ -380,7 +495,7 @@ export default function Home() {
                 </tr>
               </thead>
               <tbody>
-                {applicants.map((applicant) => (
+                {filteredApplicants.map((applicant) => (
                   <tr key={applicant.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
                     <td style={{ padding: '0.75rem' }}>{applicant.name}</td>
                     <td style={{ padding: '0.75rem' }}>{applicant.email}</td>
