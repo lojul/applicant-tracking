@@ -11,11 +11,19 @@ type Applicant = {
   status: string;
   position?: string;
   notes?: string;
+  yearsOfExperience?: number;
+  expectedSalary?: number;
+  currentCompany?: string;
+  currentTitle?: string;
+  location?: string;
+  source?: string;
+  linkedinUrl?: string;
   createdAt: string;
   updatedAt: string;
 };
 
 const STATUSES = ['applied', 'interviewing', 'offered', 'rejected', 'hired'];
+const SOURCES = ['linkedin', 'indeed', 'referral', 'company-website', 'recruiter', 'other'];
 
 export default function ApplicantsPage() {
   const [applicants, setApplicants] = useState<Applicant[]>([]);
@@ -24,6 +32,7 @@ export default function ApplicantsPage() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [sourceFilter, setSourceFilter] = useState('all');
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -31,6 +40,16 @@ export default function ApplicantsPage() {
     status: 'applied',
     position: '',
     notes: '',
+    yearsOfExperience: '',
+    expectedSalary: '',
+    currentCompany: '',
+    currentTitle: '',
+    location: '',
+    source: '',
+    referredBy: '',
+    linkedinUrl: '',
+    portfolioUrl: '',
+    resumeUrl: '',
   });
 
   useEffect(() => {
@@ -52,13 +71,18 @@ export default function ApplicantsPage() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    const payload = {
+      ...formData,
+      yearsOfExperience: formData.yearsOfExperience ? parseInt(formData.yearsOfExperience) : null,
+      expectedSalary: formData.expectedSalary ? parseInt(formData.expectedSalary) : null,
+    };
+
     try {
       if (editingId) {
-        // Update existing applicant
         const res = await fetch(`/api/applicants/${editingId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formData),
+          body: JSON.stringify(payload),
         });
 
         if (res.ok) {
@@ -66,11 +90,10 @@ export default function ApplicantsPage() {
           resetForm();
         }
       } else {
-        // Create new applicant
         const res = await fetch('/api/applicants', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formData),
+          body: JSON.stringify(payload),
         });
 
         if (res.ok) {
@@ -92,6 +115,16 @@ export default function ApplicantsPage() {
       status: applicant.status,
       position: applicant.position || '',
       notes: applicant.notes || '',
+      yearsOfExperience: applicant.yearsOfExperience?.toString() || '',
+      expectedSalary: applicant.expectedSalary?.toString() || '',
+      currentCompany: applicant.currentCompany || '',
+      currentTitle: applicant.currentTitle || '',
+      location: applicant.location || '',
+      source: applicant.source || '',
+      referredBy: '',
+      linkedinUrl: applicant.linkedinUrl || '',
+      portfolioUrl: '',
+      resumeUrl: '',
     });
     setShowForm(true);
   };
@@ -120,6 +153,16 @@ export default function ApplicantsPage() {
       status: 'applied',
       position: '',
       notes: '',
+      yearsOfExperience: '',
+      expectedSalary: '',
+      currentCompany: '',
+      currentTitle: '',
+      location: '',
+      source: '',
+      referredBy: '',
+      linkedinUrl: '',
+      portfolioUrl: '',
+      resumeUrl: '',
     });
     setEditingId(null);
     setShowForm(false);
@@ -136,21 +179,29 @@ export default function ApplicantsPage() {
     return colors[status] || '#6b7280';
   };
 
+  const formatSalary = (amount?: number) => {
+    if (!amount) return '-';
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
+
   const filteredApplicants = applicants.filter((applicant) => {
-    // Search filter
     const searchLower = searchTerm.toLowerCase();
     const matchesSearch =
       searchTerm === '' ||
       applicant.name.toLowerCase().includes(searchLower) ||
       applicant.email.toLowerCase().includes(searchLower) ||
       (applicant.position?.toLowerCase().includes(searchLower) ?? false) ||
-      (applicant.phone?.toLowerCase().includes(searchLower) ?? false);
+      (applicant.currentCompany?.toLowerCase().includes(searchLower) ?? false) ||
+      (applicant.location?.toLowerCase().includes(searchLower) ?? false);
 
-    // Status filter
-    const matchesStatus =
-      statusFilter === 'all' || applicant.status === statusFilter;
+    const matchesStatus = statusFilter === 'all' || applicant.status === statusFilter;
+    const matchesSource = sourceFilter === 'all' || applicant.source === sourceFilter;
 
-    return matchesSearch && matchesStatus;
+    return matchesSearch && matchesStatus && matchesSource;
   });
 
   if (loading) {
@@ -168,7 +219,7 @@ export default function ApplicantsPage() {
       padding: '2rem'
     }}>
       <div style={{
-        maxWidth: '1400px',
+        maxWidth: '1600px',
         margin: '0 auto',
         backgroundColor: 'white',
         borderRadius: '8px',
@@ -217,6 +268,7 @@ export default function ApplicantsPage() {
           </div>
         </div>
 
+        {/* Filters */}
         <div style={{
           display: 'flex',
           gap: '1rem',
@@ -226,7 +278,7 @@ export default function ApplicantsPage() {
           <div style={{ flex: '1', minWidth: '300px' }}>
             <input
               type="text"
-              placeholder="Search by name, email, position, or phone..."
+              placeholder="Search by name, email, position, company, location..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               style={{
@@ -238,7 +290,7 @@ export default function ApplicantsPage() {
               }}
             />
           </div>
-          <div style={{ minWidth: '200px' }}>
+          <div style={{ minWidth: '150px' }}>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
@@ -259,11 +311,33 @@ export default function ApplicantsPage() {
               ))}
             </select>
           </div>
-          {(searchTerm || statusFilter !== 'all') && (
+          <div style={{ minWidth: '150px' }}>
+            <select
+              value={sourceFilter}
+              onChange={(e) => setSourceFilter(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                border: '1px solid #d1d5db',
+                borderRadius: '6px',
+                fontSize: '1rem',
+                backgroundColor: 'white',
+              }}
+            >
+              <option value="all">All Sources</option>
+              {SOURCES.map((source) => (
+                <option key={source} value={source}>
+                  {source.charAt(0).toUpperCase() + source.slice(1).replace('-', ' ')}
+                </option>
+              ))}
+            </select>
+          </div>
+          {(searchTerm || statusFilter !== 'all' || sourceFilter !== 'all') && (
             <button
               onClick={() => {
                 setSearchTerm('');
                 setStatusFilter('all');
+                setSourceFilter('all');
               }}
               style={{
                 padding: '0.75rem 1rem',
@@ -288,6 +362,7 @@ export default function ApplicantsPage() {
           Showing {filteredApplicants.length} of {applicants.length} applicant{applicants.length !== 1 ? 's' : ''}
         </div>
 
+        {/* Modal Form */}
         {showForm && (
           <div style={{
             position: 'fixed',
@@ -305,7 +380,7 @@ export default function ApplicantsPage() {
               backgroundColor: 'white',
               borderRadius: '8px',
               padding: '2rem',
-              maxWidth: '500px',
+              maxWidth: '700px',
               width: '90%',
               maxHeight: '90vh',
               overflow: 'auto',
@@ -315,146 +390,228 @@ export default function ApplicantsPage() {
               </h2>
 
               <form onSubmit={handleSubmit}>
-                <div style={{ marginBottom: '1rem' }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
-                    Name *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '0.5rem',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '4px',
-                      fontSize: '1rem',
-                    }}
-                  />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  {/* Basic Info */}
+                  <div style={{ gridColumn: 'span 2' }}>
+                    <h3 style={{ fontSize: '1rem', fontWeight: '600', color: '#374151', marginBottom: '0.75rem', borderBottom: '1px solid #e5e7eb', paddingBottom: '0.5rem' }}>
+                      Basic Information
+                    </h3>
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Name *</label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '1rem' }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Email *</label>
+                    <input
+                      type="email"
+                      required
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '1rem' }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Phone</label>
+                    <input
+                      type="tel"
+                      value={formData.phone}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '1rem' }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Location</label>
+                    <input
+                      type="text"
+                      value={formData.location}
+                      onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                      placeholder="City, State"
+                      style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '1rem' }}
+                    />
+                  </div>
+
+                  {/* Current Employment */}
+                  <div style={{ gridColumn: 'span 2', marginTop: '1rem' }}>
+                    <h3 style={{ fontSize: '1rem', fontWeight: '600', color: '#374151', marginBottom: '0.75rem', borderBottom: '1px solid #e5e7eb', paddingBottom: '0.5rem' }}>
+                      Current Employment
+                    </h3>
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Current Company</label>
+                    <input
+                      type="text"
+                      value={formData.currentCompany}
+                      onChange={(e) => setFormData({ ...formData, currentCompany: e.target.value })}
+                      style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '1rem' }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Current Title</label>
+                    <input
+                      type="text"
+                      value={formData.currentTitle}
+                      onChange={(e) => setFormData({ ...formData, currentTitle: e.target.value })}
+                      style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '1rem' }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Years of Experience</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={formData.yearsOfExperience}
+                      onChange={(e) => setFormData({ ...formData, yearsOfExperience: e.target.value })}
+                      style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '1rem' }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Expected Salary (USD)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={formData.expectedSalary}
+                      onChange={(e) => setFormData({ ...formData, expectedSalary: e.target.value })}
+                      style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '1rem' }}
+                    />
+                  </div>
+
+                  {/* Application Details */}
+                  <div style={{ gridColumn: 'span 2', marginTop: '1rem' }}>
+                    <h3 style={{ fontSize: '1rem', fontWeight: '600', color: '#374151', marginBottom: '0.75rem', borderBottom: '1px solid #e5e7eb', paddingBottom: '0.5rem' }}>
+                      Application Details
+                    </h3>
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Position</label>
+                    <input
+                      type="text"
+                      value={formData.position}
+                      onChange={(e) => setFormData({ ...formData, position: e.target.value })}
+                      style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '1rem' }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Status</label>
+                    <select
+                      value={formData.status}
+                      onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                      style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '1rem' }}
+                    >
+                      {STATUSES.map((status) => (
+                        <option key={status} value={status}>
+                          {status.charAt(0).toUpperCase() + status.slice(1)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Source</label>
+                    <select
+                      value={formData.source}
+                      onChange={(e) => setFormData({ ...formData, source: e.target.value })}
+                      style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '1rem' }}
+                    >
+                      <option value="">Select source...</option>
+                      {SOURCES.map((source) => (
+                        <option key={source} value={source}>
+                          {source.charAt(0).toUpperCase() + source.slice(1).replace('-', ' ')}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Referred By</label>
+                    <input
+                      type="text"
+                      value={formData.referredBy}
+                      onChange={(e) => setFormData({ ...formData, referredBy: e.target.value })}
+                      placeholder="Name of referrer"
+                      style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '1rem' }}
+                    />
+                  </div>
+
+                  {/* Links */}
+                  <div style={{ gridColumn: 'span 2', marginTop: '1rem' }}>
+                    <h3 style={{ fontSize: '1rem', fontWeight: '600', color: '#374151', marginBottom: '0.75rem', borderBottom: '1px solid #e5e7eb', paddingBottom: '0.5rem' }}>
+                      Links
+                    </h3>
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>LinkedIn URL</label>
+                    <input
+                      type="url"
+                      value={formData.linkedinUrl}
+                      onChange={(e) => setFormData({ ...formData, linkedinUrl: e.target.value })}
+                      placeholder="https://linkedin.com/in/..."
+                      style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '1rem' }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Portfolio URL</label>
+                    <input
+                      type="url"
+                      value={formData.portfolioUrl}
+                      onChange={(e) => setFormData({ ...formData, portfolioUrl: e.target.value })}
+                      placeholder="https://..."
+                      style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '1rem' }}
+                    />
+                  </div>
+
+                  <div style={{ gridColumn: 'span 2' }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Resume URL</label>
+                    <input
+                      type="url"
+                      value={formData.resumeUrl}
+                      onChange={(e) => setFormData({ ...formData, resumeUrl: e.target.value })}
+                      placeholder="https://..."
+                      style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '1rem' }}
+                    />
+                  </div>
+
+                  {/* Notes */}
+                  <div style={{ gridColumn: 'span 2', marginTop: '1rem' }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Notes</label>
+                    <textarea
+                      value={formData.notes}
+                      onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                      rows={4}
+                      style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '1rem', resize: 'vertical' }}
+                    />
+                  </div>
                 </div>
 
-                <div style={{ marginBottom: '1rem' }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
-                    Email *
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '0.5rem',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '4px',
-                      fontSize: '1rem',
-                    }}
-                  />
-                </div>
-
-                <div style={{ marginBottom: '1rem' }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
-                    Phone
-                  </label>
-                  <input
-                    type="tel"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '0.5rem',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '4px',
-                      fontSize: '1rem',
-                    }}
-                  />
-                </div>
-
-                <div style={{ marginBottom: '1rem' }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
-                    Position
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.position}
-                    onChange={(e) => setFormData({ ...formData, position: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '0.5rem',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '4px',
-                      fontSize: '1rem',
-                    }}
-                  />
-                </div>
-
-                <div style={{ marginBottom: '1rem' }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
-                    Status
-                  </label>
-                  <select
-                    value={formData.status}
-                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '0.5rem',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '4px',
-                      fontSize: '1rem',
-                    }}
-                  >
-                    {STATUSES.map((status) => (
-                      <option key={status} value={status}>
-                        {status.charAt(0).toUpperCase() + status.slice(1)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div style={{ marginBottom: '1.5rem' }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
-                    Notes
-                  </label>
-                  <textarea
-                    value={formData.notes}
-                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    rows={4}
-                    style={{
-                      width: '100%',
-                      padding: '0.5rem',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '4px',
-                      fontSize: '1rem',
-                      resize: 'vertical',
-                    }}
-                  />
-                </div>
-
-                <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+                <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
                   <button
                     type="button"
                     onClick={resetForm}
-                    style={{
-                      padding: '0.5rem 1rem',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '4px',
-                      backgroundColor: 'white',
-                      cursor: 'pointer',
-                    }}
+                    style={{ padding: '0.5rem 1rem', border: '1px solid #d1d5db', borderRadius: '4px', backgroundColor: 'white', cursor: 'pointer' }}
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    style={{
-                      padding: '0.5rem 1rem',
-                      backgroundColor: '#3b82f6',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                    }}
+                    style={{ padding: '0.5rem 1rem', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
                   >
                     {editingId ? 'Update' : 'Create'}
                   </button>
@@ -464,36 +621,18 @@ export default function ApplicantsPage() {
           </div>
         )}
 
+        {/* Table */}
         <div style={{ overflowX: 'auto' }}>
           {applicants.length === 0 ? (
-            <div style={{
-              textAlign: 'center',
-              padding: '3rem',
-              color: '#6b7280'
-            }}>
+            <div style={{ textAlign: 'center', padding: '3rem', color: '#6b7280' }}>
               <p style={{ fontSize: '1.125rem' }}>No applicants yet. Add your first applicant to get started!</p>
             </div>
           ) : filteredApplicants.length === 0 ? (
-            <div style={{
-              textAlign: 'center',
-              padding: '3rem',
-              color: '#6b7280'
-            }}>
+            <div style={{ textAlign: 'center', padding: '3rem', color: '#6b7280' }}>
               <p style={{ fontSize: '1.125rem' }}>No applicants match your search criteria.</p>
               <button
-                onClick={() => {
-                  setSearchTerm('');
-                  setStatusFilter('all');
-                }}
-                style={{
-                  marginTop: '1rem',
-                  padding: '0.5rem 1rem',
-                  backgroundColor: '#3b82f6',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
+                onClick={() => { setSearchTerm(''); setStatusFilter('all'); setSourceFilter('all'); }}
+                style={{ marginTop: '1rem', padding: '0.5rem 1rem', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
               >
                 Clear Filters
               </button>
@@ -503,21 +642,43 @@ export default function ApplicantsPage() {
               <thead>
                 <tr style={{ backgroundColor: '#f9fafb', borderBottom: '2px solid #e5e7eb' }}>
                   <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: '600' }}>Name</th>
-                  <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: '600' }}>Email</th>
-                  <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: '600' }}>Phone</th>
                   <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: '600' }}>Position</th>
+                  <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: '600' }}>Company</th>
+                  <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: '600' }}>Experience</th>
+                  <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: '600' }}>Salary</th>
+                  <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: '600' }}>Source</th>
                   <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: '600' }}>Status</th>
-                  <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: '600' }}>Created</th>
                   <th style={{ padding: '0.75rem', textAlign: 'right', fontWeight: '600' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredApplicants.map((applicant) => (
                   <tr key={applicant.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
-                    <td style={{ padding: '0.75rem' }}>{applicant.name}</td>
-                    <td style={{ padding: '0.75rem' }}>{applicant.email}</td>
-                    <td style={{ padding: '0.75rem' }}>{applicant.phone || '-'}</td>
+                    <td style={{ padding: '0.75rem' }}>
+                      <Link
+                        href={`/applicants/${applicant.id}`}
+                        style={{ color: '#3b82f6', textDecoration: 'none', fontWeight: '500' }}
+                      >
+                        {applicant.name}
+                      </Link>
+                      <p style={{ fontSize: '0.75rem', color: '#6b7280' }}>{applicant.email}</p>
+                    </td>
                     <td style={{ padding: '0.75rem' }}>{applicant.position || '-'}</td>
+                    <td style={{ padding: '0.75rem' }}>
+                      {applicant.currentCompany || '-'}
+                      {applicant.location && (
+                        <p style={{ fontSize: '0.75rem', color: '#6b7280' }}>{applicant.location}</p>
+                      )}
+                    </td>
+                    <td style={{ padding: '0.75rem' }}>
+                      {applicant.yearsOfExperience ? `${applicant.yearsOfExperience} yrs` : '-'}
+                    </td>
+                    <td style={{ padding: '0.75rem' }}>
+                      {formatSalary(applicant.expectedSalary)}
+                    </td>
+                    <td style={{ padding: '0.75rem', textTransform: 'capitalize' }}>
+                      {applicant.source?.replace('-', ' ') || '-'}
+                    </td>
                     <td style={{ padding: '0.75rem' }}>
                       <span style={{
                         padding: '0.25rem 0.75rem',
@@ -530,10 +691,22 @@ export default function ApplicantsPage() {
                         {applicant.status.charAt(0).toUpperCase() + applicant.status.slice(1)}
                       </span>
                     </td>
-                    <td style={{ padding: '0.75rem', fontSize: '0.875rem', color: '#6b7280' }}>
-                      {new Date(applicant.createdAt).toLocaleDateString()}
-                    </td>
                     <td style={{ padding: '0.75rem', textAlign: 'right' }}>
+                      <Link
+                        href={`/applicants/${applicant.id}`}
+                        style={{
+                          padding: '0.25rem 0.75rem',
+                          marginRight: '0.5rem',
+                          backgroundColor: '#6b7280',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          textDecoration: 'none',
+                          fontSize: '0.875rem',
+                        }}
+                      >
+                        View
+                      </Link>
                       <button
                         onClick={() => handleEdit(applicant)}
                         style={{
