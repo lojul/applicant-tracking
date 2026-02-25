@@ -692,50 +692,53 @@ export default function ApplicantsPage() {
                       </span>
                     </td>
                     <td style={{ padding: '0.75rem', textAlign: 'right' }}>
-                      <Link
-                        href={`/applicants/${applicant.id}`}
-                        style={{
-                          padding: '0.25rem 0.75rem',
-                          marginRight: '0.5rem',
-                          backgroundColor: '#6b7280',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '4px',
-                          textDecoration: 'none',
-                          fontSize: '0.875rem',
-                        }}
-                      >
-                        View
-                      </Link>
-                      <button
-                        onClick={() => handleEdit(applicant)}
-                        style={{
-                          padding: '0.25rem 0.75rem',
-                          marginRight: '0.5rem',
-                          backgroundColor: '#3b82f6',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          fontSize: '0.875rem',
-                        }}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(applicant.id)}
-                        style={{
-                          padding: '0.25rem 0.75rem',
-                          backgroundColor: '#ef4444',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          fontSize: '0.875rem',
-                        }}
-                      >
-                        Delete
-                      </button>
+                      <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', flexWrap: 'nowrap' }}>
+                        <Link
+                          href={`/applicants/${applicant.id}`}
+                          style={{
+                            padding: '0.25rem 0.75rem',
+                            backgroundColor: '#6b7280',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            textDecoration: 'none',
+                            fontSize: '0.875rem',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          View
+                        </Link>
+                        <button
+                          onClick={() => handleEdit(applicant)}
+                          style={{
+                            padding: '0.25rem 0.75rem',
+                            backgroundColor: '#3b82f6',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            fontSize: '0.875rem',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(applicant.id)}
+                          style={{
+                            padding: '0.25rem 0.75rem',
+                            backgroundColor: '#ef4444',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            fontSize: '0.875rem',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
