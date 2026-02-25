@@ -32,6 +32,7 @@ export const applicants = pgTable("applicants", {
   // New fields
   jobId: integer("job_id").references(() => jobs.id),
   resumeUrl: varchar("resume_url", { length: 500 }),
+  photoUrl: varchar("photo_url", { length: 500 }), // Extracted photo from resume
   linkedinUrl: varchar("linkedin_url", { length: 500 }),
   portfolioUrl: varchar("portfolio_url", { length: 500 }),
   yearsOfExperience: integer("years_of_experience"),
