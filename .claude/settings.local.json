@@ -5,7 +5,31 @@
       "Bash(npm install:*)",
       "Bash(git init)",
       "Bash(git add .)",
-      "Bash(git commit -m \"Initial commit: Applicant tracking CRUD API\")"
+      "Bash(git commit -m \"Initial commit: Applicant tracking CRUD API\")",
+      "Bash(git remote add:*)",
+      "Bash(git branch:*)",
+      "Bash(git push:*)",
+      "Bash(vercel:*)",
+      "Bash(npm run build:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(curl:*)",
+      "Bash(node:*)",
+      "Bash(chmod:*)",
+      "Bash(./seed.sh:*)",
+      "Bash(npm run db:push:*)",
+      "Bash(source:*)",
+      "Bash(npm run dev:*)",
+      "Bash(open:*)",
+      "Bash(osascript:*)",
+      "Bash(psql:*)",
+      "Bash(yes:*)",
+      "Bash(ls:*)",
+      "Bash(npm ls:*)",
+      "Bash(lsof:*)",
+      "Bash(npm show:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(POSTGRES_URL=\"postgresql://neondb_owner:npg_8ZzRQBwesKC6@ep-lingering-scene-a1ng5zwx-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require\" npm run db:push:*)"
     ]
   }
 }

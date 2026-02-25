@@ -3,6 +3,9 @@
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import AppShell from '@/components/layout/AppShell';
+import Card from '@/components/ui/Card';
+import Button from '@/components/ui/Button';
 import type { ExtractedResumeData, ExtractedEducation, ExtractedWorkExperience, ExtractedSkill } from '@/lib/types/resume';
 
 type Step = 'upload' | 'processing' | 'review';
@@ -262,45 +265,34 @@ export default function NewFromResumePage() {
   };
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      backgroundColor: '#f3f4f6',
-      padding: '2rem',
-    }}>
+    <AppShell>
       <div style={{ maxWidth: '900px', margin: '0 auto' }}>
+        {/* Page Header */}
         <div style={{ marginBottom: '1.5rem' }}>
-          <Link
-            href="/applicants"
-            style={{
-              color: '#6b7280',
-              textDecoration: 'none',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-            }}
-          >
-            &larr; Back to Applicants
-          </Link>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+            <Link
+              href="/applicants"
+              style={{
+                color: '#64748b',
+                textDecoration: 'none',
+                fontSize: '0.875rem',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.25rem',
+              }}
+            >
+              ← Back to Candidates
+            </Link>
+          </div>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: '600', color: '#0f172a', marginBottom: '0.25rem' }}>
+            Upload Resume
+          </h1>
+          <p style={{ fontSize: '0.875rem', color: '#64748b' }}>
+            Upload a PDF resume and we&apos;ll automatically extract candidate information using AI
+          </p>
         </div>
 
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '8px',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-          overflow: 'hidden',
-        }}>
-          {/* Header */}
-          <div style={{
-            padding: '1.5rem 2rem',
-            borderBottom: '1px solid #e5e7eb',
-          }}>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1f2937' }}>
-              Create Applicant from Resume
-            </h1>
-            <p style={{ color: '#6b7280', marginTop: '0.25rem' }}>
-              Upload a PDF resume and we&apos;ll automatically extract the information
-            </p>
-          </div>
+        <Card padding="none" style={{ overflow: 'hidden' }}>
 
           {/* Step Indicator */}
           <div style={{
@@ -900,8 +892,8 @@ export default function NewFromResumePage() {
               </div>
             )}
           </div>
-        </div>
+        </Card>
       </div>
-    </div>
+    </AppShell>
   );
 }
