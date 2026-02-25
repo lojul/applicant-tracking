@@ -81,12 +81,27 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const deleted = await db
-    .delete(applicants)
-    .where(eq(applicants.id, parseInt(id)))
-    .returning();
+  const applicantId = parseInt(id);
 
-  if (deleted.length === 0) {
+  // Delete in transaction to handle foreign key constraints
+  const result = await db.transaction(async (tx) => {
+    // Delete related records first
+    await tx.delete(applicantSkills).where(eq(applicantSkills.applicantId, applicantId));
+    await tx.delete(education).where(eq(education.applicantId, applicantId));
+    await tx.delete(workExperience).where(eq(workExperience.applicantId, applicantId));
+    await tx.delete(interviews).where(eq(interviews.applicantId, applicantId));
+    await tx.delete(documents).where(eq(documents.applicantId, applicantId));
+
+    // Delete the applicant
+    const deleted = await tx
+      .delete(applicants)
+      .where(eq(applicants.id, applicantId))
+      .returning();
+
+    return deleted;
+  });
+
+  if (result.length === 0) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
   return NextResponse.json({ success: true });
