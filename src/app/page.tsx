@@ -77,20 +77,50 @@ export default function Dashboard() {
           <h1 style={{ fontSize: '2rem', fontWeight: 'bold', color: '#1f2937' }}>
             Dashboard
           </h1>
-          <Link
-            href="/applicants"
-            style={{
-              backgroundColor: '#6b7280',
-              color: 'white',
-              padding: '0.75rem 1.5rem',
-              borderRadius: '6px',
-              textDecoration: 'none',
-              fontSize: '1rem',
-              fontWeight: '500',
-            }}
-          >
-            View All Applicants
-          </Link>
+          <div style={{ display: 'flex', gap: '1rem' }}>
+            <Link
+              href="/applicants/new-from-resume"
+              style={{
+                backgroundColor: '#10b981',
+                color: 'white',
+                padding: '0.75rem 1.5rem',
+                borderRadius: '6px',
+                textDecoration: 'none',
+                fontSize: '1rem',
+                fontWeight: '500',
+              }}
+            >
+              Upload Resume
+            </Link>
+            <Link
+              href="/jobs"
+              style={{
+                backgroundColor: '#3b82f6',
+                color: 'white',
+                padding: '0.75rem 1.5rem',
+                borderRadius: '6px',
+                textDecoration: 'none',
+                fontSize: '1rem',
+                fontWeight: '500',
+              }}
+            >
+              Job Listings
+            </Link>
+            <Link
+              href="/applicants"
+              style={{
+                backgroundColor: '#6b7280',
+                color: 'white',
+                padding: '0.75rem 1.5rem',
+                borderRadius: '6px',
+                textDecoration: 'none',
+                fontSize: '1rem',
+                fontWeight: '500',
+              }}
+            >
+              All Applicants
+            </Link>
+          </div>
         </div>
 
         {/* Summary Cards */}
