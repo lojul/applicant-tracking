@@ -197,14 +197,7 @@ export default function Dashboard() {
       </div>
 
       {/* KPI Cards */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(4, 1fr)',
-          gap: '1rem',
-          marginBottom: '1.5rem',
-        }}
-      >
+      <div className="kpi-grid" style={{ marginBottom: '1.5rem' }}>
         <KPICard
           title="Open Jobs"
           value={openJobs}
@@ -236,7 +229,7 @@ export default function Dashboard() {
       </div>
 
       {/* Main Content Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '1.5rem' }}>
+      <div className="main-grid">
         {/* Left Column */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           {/* Pipeline Overview */}

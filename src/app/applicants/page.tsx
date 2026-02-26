@@ -233,14 +233,14 @@ export default function CandidatesPage() {
 
       {/* Stage Tabs */}
       <div
+        className="stage-tabs"
         style={{
-          display: 'flex',
-          gap: '0.5rem',
           marginBottom: '1rem',
           padding: '0.25rem',
           backgroundColor: '#f1f5f9',
           borderRadius: '10px',
           width: 'fit-content',
+          maxWidth: '100%',
         }}
       >
         {['all', ...STATUSES].map((status) => {

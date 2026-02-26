@@ -1,12 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 interface AppShellProps {
   children: React.ReactNode;
 }
+
+const MOBILE_BREAKPOINT = 768;
 
 const NAV_ITEMS = [
   { href: '/', label: 'Dashboard', icon: 'dashboard' },
@@ -70,6 +72,27 @@ export default function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
   const [searchQuery, setSearchQuery] = useState('');
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
+      if (window.innerWidth >= MOBILE_BREAKPOINT) {
+        setSidebarOpen(false);
+      }
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Close sidebar when navigating on mobile
+  useEffect(() => {
+    if (isMobile) {
+      setSidebarOpen(false);
+    }
+  }, [pathname, isMobile]);
 
   return (
     <div style={{
@@ -78,6 +101,20 @@ export default function AppShell({ children }: AppShellProps) {
       backgroundColor: '#f8fafc',
       fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
     }}>
+      {/* Mobile Overlay */}
+      {isMobile && sidebarOpen && (
+        <div
+          onClick={() => setSidebarOpen(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            zIndex: 99,
+            transition: 'opacity 0.2s',
+          }}
+        />
+      )}
+
       {/* Sidebar */}
       <aside style={{
         width: '240px',
@@ -87,14 +124,19 @@ export default function AppShell({ children }: AppShellProps) {
         flexDirection: 'column',
         position: 'fixed',
         top: 0,
-        left: 0,
+        left: isMobile ? (sidebarOpen ? 0 : '-240px') : 0,
         bottom: 0,
         zIndex: 100,
+        transition: 'left 0.3s ease',
+        boxShadow: isMobile && sidebarOpen ? '4px 0 20px rgba(0,0,0,0.1)' : 'none',
       }}>
         {/* Logo */}
         <div style={{
           padding: '1.25rem 1.5rem',
           borderBottom: '1px solid #e2e8f0',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
         }}>
           <div style={{
             display: 'flex',
@@ -124,6 +166,25 @@ export default function AppShell({ children }: AppShellProps) {
               TalentFlow
             </span>
           </div>
+          {/* Mobile close button */}
+          {isMobile && (
+            <button
+              onClick={() => setSidebarOpen(false)}
+              style={{
+                padding: '0.5rem',
+                borderRadius: '8px',
+                border: 'none',
+                backgroundColor: 'transparent',
+                cursor: 'pointer',
+                color: '#64748b',
+              }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          )}
         </div>
 
         {/* Navigation */}
@@ -217,9 +278,10 @@ export default function AppShell({ children }: AppShellProps) {
       {/* Main area */}
       <div style={{
         flex: 1,
-        marginLeft: '240px',
+        marginLeft: isMobile ? 0 : '240px',
         display: 'flex',
         flexDirection: 'column',
+        transition: 'margin-left 0.3s ease',
       }}>
         {/* Top bar */}
         <header style={{
@@ -229,11 +291,37 @@ export default function AppShell({ children }: AppShellProps) {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '0 1.5rem',
+          padding: isMobile ? '0 1rem' : '0 1.5rem',
           position: 'sticky',
           top: 0,
           zIndex: 50,
+          gap: '0.75rem',
         }}>
+          {/* Mobile menu button */}
+          {isMobile && (
+            <button
+              onClick={() => setSidebarOpen(true)}
+              style={{
+                padding: '0.5rem',
+                borderRadius: '8px',
+                border: 'none',
+                backgroundColor: 'transparent',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#64748b',
+                flexShrink: 0,
+              }}
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <line x1="3" y1="12" x2="21" y2="12" />
+                <line x1="3" y1="18" x2="21" y2="18" />
+              </svg>
+            </button>
+          )}
+
           {/* Search */}
           <div style={{
             display: 'flex',
@@ -242,7 +330,9 @@ export default function AppShell({ children }: AppShellProps) {
             backgroundColor: '#f1f5f9',
             borderRadius: '8px',
             padding: '0.5rem 1rem',
-            width: '400px',
+            flex: 1,
+            maxWidth: isMobile ? 'none' : '400px',
+            minWidth: 0,
           }}>
             <span style={{ color: '#94a3b8' }}>{ICONS.search}</span>
             <input
@@ -259,23 +349,27 @@ export default function AppShell({ children }: AppShellProps) {
                 width: '100%',
               }}
             />
-            <kbd style={{
-              fontSize: '0.6875rem',
-              padding: '0.125rem 0.375rem',
-              backgroundColor: '#e2e8f0',
-              borderRadius: '4px',
-              color: '#64748b',
-              fontFamily: 'inherit',
-            }}>
-              ⌘K
-            </kbd>
+            {!isMobile && (
+              <kbd style={{
+                fontSize: '0.6875rem',
+                padding: '0.125rem 0.375rem',
+                backgroundColor: '#e2e8f0',
+                borderRadius: '4px',
+                color: '#64748b',
+                fontFamily: 'inherit',
+                flexShrink: 0,
+              }}>
+                ⌘K
+              </kbd>
+            )}
           </div>
 
           {/* Right side */}
           <div style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '1rem',
+            gap: isMobile ? '0.5rem' : '1rem',
+            flexShrink: 0,
           }}>
             {/* Notifications */}
             <button
@@ -310,9 +404,9 @@ export default function AppShell({ children }: AppShellProps) {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.75rem',
-                  padding: '0.375rem 0.75rem 0.375rem 0.375rem',
+                  padding: isMobile ? '0.25rem' : '0.375rem 0.75rem 0.375rem 0.375rem',
                   borderRadius: '8px',
-                  border: '1px solid #e2e8f0',
+                  border: isMobile ? 'none' : '1px solid #e2e8f0',
                   backgroundColor: 'transparent',
                   cursor: 'pointer',
                 }}
@@ -331,26 +425,30 @@ export default function AppShell({ children }: AppShellProps) {
                 }}>
                   JD
                 </div>
-                <div style={{ textAlign: 'left' }}>
-                  <p style={{
-                    fontSize: '0.875rem',
-                    fontWeight: '500',
-                    color: '#0f172a',
-                    margin: 0,
-                  }}>
-                    John Doe
-                  </p>
-                  <p style={{
-                    fontSize: '0.6875rem',
-                    color: '#64748b',
-                    margin: 0,
-                  }}>
-                    Recruiter
-                  </p>
-                </div>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2">
-                  <polyline points="6 9 12 15 18 9" />
-                </svg>
+                {!isMobile && (
+                  <>
+                    <div style={{ textAlign: 'left' }}>
+                      <p style={{
+                        fontSize: '0.875rem',
+                        fontWeight: '500',
+                        color: '#0f172a',
+                        margin: 0,
+                      }}>
+                        John Doe
+                      </p>
+                      <p style={{
+                        fontSize: '0.6875rem',
+                        color: '#64748b',
+                        margin: 0,
+                      }}>
+                        Recruiter
+                      </p>
+                    </div>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2">
+                      <polyline points="6 9 12 15 18 9" />
+                    </svg>
+                  </>
+                )}
               </button>
 
               {showUserMenu && (
@@ -401,7 +499,7 @@ export default function AppShell({ children }: AppShellProps) {
         {/* Page content */}
         <main style={{
           flex: 1,
-          padding: '1.5rem',
+          padding: isMobile ? '1rem' : '1.5rem',
           overflowY: 'auto',
         }}>
           {children}
