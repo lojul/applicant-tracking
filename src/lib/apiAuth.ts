@@ -6,10 +6,10 @@ import { NextRequest, NextResponse } from "next/server";
  */
 export function validateApiKey(request: NextRequest): { valid: boolean; error?: NextResponse } {
   const apiKey = request.headers.get("x-api-key");
-  const expectedKey = process.env.PUBLIC_API_KEY;
+  const expectedKey = process.env.RECRUIT_API_KEY;
 
   if (!expectedKey) {
-    console.error("PUBLIC_API_KEY not configured in environment");
+    console.error("RECRUIT_API_KEY not configured in environment");
     return {
       valid: false,
       error: NextResponse.json(
@@ -36,7 +36,7 @@ export function validateApiKey(request: NextRequest): { valid: boolean; error?: 
  * CORS headers for cross-origin requests from the public website
  */
 export function corsHeaders(allowedOrigin?: string) {
-  const origin = allowedOrigin || process.env.PUBLIC_WEBSITE_URL || "*";
+  const origin = allowedOrigin || process.env.RECRUIT_WEBSITE_URL || "*";
   return {
     "Access-Control-Allow-Origin": origin,
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
