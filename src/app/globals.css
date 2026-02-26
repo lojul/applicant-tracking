@@ -74,15 +74,21 @@ select:focus {
 
 @media (max-width: 768px) {
   .kpi-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
   }
 
   .main-grid {
     grid-template-columns: 1fr;
+    gap: 1rem;
   }
 
   .hide-mobile {
     display: none !important;
+  }
+
+  .tasks-sidebar {
+    display: none;
   }
 }
 

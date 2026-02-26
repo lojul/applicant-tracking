@@ -5,8 +5,10 @@ import Link from 'next/link';
 import AppShell from '@/components/layout/AppShell';
 import Card, { KPICard } from '@/components/ui/Card';
 import Badge, { StageBadge, AwaitingBadge } from '@/components/ui/Badge';
-import Button from '@/components/ui/Button';
+import Button, { IconButton } from '@/components/ui/Button';
 import Pipeline from '@/components/ui/Pipeline';
+
+const MOBILE_BREAKPOINT = 768;
 
 interface Job {
   id: number;
@@ -37,6 +39,13 @@ const ICONS = {
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <rect x="2" y="7" width="20" height="14" rx="2" />
       <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
+    </svg>
+  ),
+  upload: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="17 8 12 3 7 8" />
+      <line x1="12" y1="3" x2="12" y2="15" />
     </svg>
   ),
   users: (
@@ -85,6 +94,14 @@ export default function Dashboard() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     Promise.all([
@@ -172,24 +189,48 @@ export default function Dashboard() {
     <AppShell>
       {/* Page Header */}
       <div style={{ marginBottom: '1.5rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          justifyContent: 'space-between',
+          alignItems: isMobile ? 'stretch' : 'center',
+          gap: isMobile ? '1rem' : '0',
+        }}>
           <div>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: '600', color: '#0f172a', marginBottom: '0.25rem' }}>
-              Good morning, John 👋
+            <h1 style={{
+              fontSize: isMobile ? '1.25rem' : '1.5rem',
+              fontWeight: '600',
+              color: '#0f172a',
+              marginBottom: '0.25rem'
+            }}>
+              {isMobile ? 'Dashboard' : 'Good morning, John 👋'}
             </h1>
-            <p style={{ fontSize: '0.875rem', color: '#64748b' }}>
-              Here&apos;s what&apos;s happening with your recruiting pipeline today.
-            </p>
+            {!isMobile && (
+              <p style={{ fontSize: '0.875rem', color: '#64748b' }}>
+                Here&apos;s what&apos;s happening with your recruiting pipeline today.
+              </p>
+            )}
           </div>
-          <div style={{ display: 'flex', gap: '0.75rem' }}>
-            <Link href="/applicants/new-from-resume">
-              <Button variant="secondary" icon={ICONS.plus}>
-                Upload Resume
+          <div style={{
+            display: 'flex',
+            gap: '0.5rem',
+            justifyContent: isMobile ? 'stretch' : 'flex-end',
+          }}>
+            <Link href="/applicants/new-from-resume" style={{ flex: isMobile ? 1 : 'none' }}>
+              <Button
+                variant="secondary"
+                icon={ICONS.upload}
+                style={{ width: isMobile ? '100%' : 'auto' }}
+              >
+                {isMobile ? 'Upload' : 'Upload Resume'}
               </Button>
             </Link>
-            <Link href="/jobs">
-              <Button icon={ICONS.plus}>
-                Post New Job
+            <Link href="/jobs" style={{ flex: isMobile ? 1 : 'none' }}>
+              <Button
+                icon={ICONS.plus}
+                style={{ width: isMobile ? '100%' : 'auto' }}
+              >
+                {isMobile ? 'New Job' : 'Post New Job'}
               </Button>
             </Link>
           </div>
@@ -199,32 +240,36 @@ export default function Dashboard() {
       {/* KPI Cards */}
       <div className="kpi-grid" style={{ marginBottom: '1.5rem' }}>
         <KPICard
-          title="Open Jobs"
+          title={isMobile ? 'Jobs' : 'Open Jobs'}
           value={openJobs}
           change={{ value: 12, trend: 'up' }}
           icon={ICONS.briefcase}
           color="blue"
+          compact={isMobile}
         />
         <KPICard
-          title="New Applicants"
+          title={isMobile ? 'Applicants' : 'New Applicants'}
           value={newApplicants}
           change={{ value: 8, trend: 'up' }}
           icon={ICONS.users}
           color="green"
+          compact={isMobile}
         />
         <KPICard
-          title="Interviews This Week"
+          title={isMobile ? 'Interviews' : 'Interviews This Week'}
           value={interviewsThisWeek}
           change={{ value: 3, trend: 'down' }}
           icon={ICONS.calendar}
           color="amber"
+          compact={isMobile}
         />
         <KPICard
-          title="Hired This Month"
+          title={isMobile ? 'Hired' : 'Hired This Month'}
           value={hiredThisMonth}
           change={{ value: 25, trend: 'up' }}
           icon={ICONS.check}
           color="purple"
+          compact={isMobile}
         />
       </div>
 
@@ -233,14 +278,16 @@ export default function Dashboard() {
         {/* Left Column */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           {/* Pipeline Overview */}
-          <Card>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-              <h2 style={{ fontSize: '1rem', fontWeight: '600', color: '#0f172a' }}>Hiring Pipeline</h2>
-              <Link href="/applicants" style={{ fontSize: '0.8125rem', color: '#0284c7', textDecoration: 'none', fontWeight: '500' }}>
-                View all candidates →
+          <Card style={isMobile ? { padding: '1rem' } : undefined}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: isMobile ? '0.75rem' : '1.25rem' }}>
+              <h2 style={{ fontSize: isMobile ? '0.875rem' : '1rem', fontWeight: '600', color: '#0f172a' }}>
+                {isMobile ? 'Pipeline' : 'Hiring Pipeline'}
+              </h2>
+              <Link href="/applicants" style={{ fontSize: isMobile ? '0.75rem' : '0.8125rem', color: '#0284c7', textDecoration: 'none', fontWeight: '500' }}>
+                {isMobile ? 'View all →' : 'View all candidates →'}
               </Link>
             </div>
-            <Pipeline stages={pipelineData} showFunnel />
+            <Pipeline stages={pipelineData} showFunnel={!isMobile} />
           </Card>
 
           {/* Job Requisitions */}
@@ -250,14 +297,16 @@ export default function Dashboard() {
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                padding: '1rem 1.5rem',
+                padding: isMobile ? '0.75rem 1rem' : '1rem 1.5rem',
                 borderBottom: '1px solid #e2e8f0',
               }}
             >
-              <h2 style={{ fontSize: '1rem', fontWeight: '600', color: '#0f172a' }}>Job Requisitions</h2>
+              <h2 style={{ fontSize: isMobile ? '0.875rem' : '1rem', fontWeight: '600', color: '#0f172a' }}>
+                {isMobile ? 'Jobs' : 'Job Requisitions'}
+              </h2>
               <Link href="/jobs">
                 <Button variant="ghost" size="sm" icon={ICONS.arrow} iconPosition="right">
-                  View all
+                  {isMobile ? 'All' : 'View all'}
                 </Button>
               </Link>
             </div>
@@ -266,11 +315,11 @@ export default function Dashboard() {
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ backgroundColor: '#f8fafc' }}>
-                    {['Job Title', 'Department', 'Location', 'Status', 'Age'].map((header) => (
+                    {(isMobile ? ['Job', 'Status'] : ['Job Title', 'Department', 'Location', 'Status', 'Age']).map((header) => (
                       <th
                         key={header}
                         style={{
-                          padding: '0.75rem 1rem',
+                          padding: isMobile ? '0.5rem 0.75rem' : '0.75rem 1rem',
                           textAlign: 'left',
                           fontSize: '0.75rem',
                           fontWeight: '600',
@@ -286,40 +335,51 @@ export default function Dashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {jobs.slice(0, 5).map((job) => (
+                  {jobs.slice(0, isMobile ? 3 : 5).map((job) => (
                     <tr
                       key={job.id}
                       style={{ transition: 'background-color 0.15s' }}
                       onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f8fafc')}
                       onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
                     >
-                      <td style={{ padding: '0.875rem 1rem' }}>
+                      <td style={{ padding: isMobile ? '0.625rem 0.75rem' : '0.875rem 1rem' }}>
                         <Link
                           href={`/jobs/${job.id}`}
-                          style={{ color: '#0f172a', textDecoration: 'none', fontWeight: '500', fontSize: '0.875rem' }}
+                          style={{ color: '#0f172a', textDecoration: 'none', fontWeight: '500', fontSize: isMobile ? '0.8125rem' : '0.875rem' }}
                         >
                           {job.title}
                         </Link>
+                        {isMobile && job.department && (
+                          <p style={{ fontSize: '0.6875rem', color: '#94a3b8', margin: '0.125rem 0 0' }}>
+                            {job.department}
+                          </p>
+                        )}
                       </td>
-                      <td style={{ padding: '0.875rem 1rem', fontSize: '0.875rem', color: '#64748b' }}>
-                        {job.department || '—'}
-                      </td>
-                      <td style={{ padding: '0.875rem 1rem', fontSize: '0.875rem', color: '#64748b' }}>
-                        {job.location || '—'}
-                      </td>
-                      <td style={{ padding: '0.875rem 1rem' }}>
-                        <Badge variant={job.status === 'open' ? 'success' : 'default'} dot>
+                      {!isMobile && (
+                        <>
+                          <td style={{ padding: '0.875rem 1rem', fontSize: '0.875rem', color: '#64748b' }}>
+                            {job.department || '—'}
+                          </td>
+                          <td style={{ padding: '0.875rem 1rem', fontSize: '0.875rem', color: '#64748b' }}>
+                            {job.location || '—'}
+                          </td>
+                        </>
+                      )}
+                      <td style={{ padding: isMobile ? '0.625rem 0.75rem' : '0.875rem 1rem' }}>
+                        <Badge variant={job.status === 'open' ? 'success' : 'default'} dot size={isMobile ? 'sm' : 'md'}>
                           {job.status}
                         </Badge>
                       </td>
-                      <td style={{ padding: '0.875rem 1rem', fontSize: '0.8125rem', color: '#94a3b8' }}>
-                        {formatDate(job.createdAt)}
-                      </td>
+                      {!isMobile && (
+                        <td style={{ padding: '0.875rem 1rem', fontSize: '0.8125rem', color: '#94a3b8' }}>
+                          {formatDate(job.createdAt)}
+                        </td>
+                      )}
                     </tr>
                   ))}
                   {jobs.length === 0 && (
                     <tr>
-                      <td colSpan={5} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>
+                      <td colSpan={isMobile ? 2 : 5} style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>
                         No jobs posted yet.{' '}
                         <Link href="/jobs" style={{ color: '#0284c7' }}>
                           Create your first job
@@ -339,20 +399,22 @@ export default function Dashboard() {
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                padding: '1rem 1.5rem',
+                padding: isMobile ? '0.75rem 1rem' : '1rem 1.5rem',
                 borderBottom: '1px solid #e2e8f0',
               }}
             >
-              <h2 style={{ fontSize: '1rem', fontWeight: '600', color: '#0f172a' }}>Recent Applicants</h2>
+              <h2 style={{ fontSize: isMobile ? '0.875rem' : '1rem', fontWeight: '600', color: '#0f172a' }}>
+                {isMobile ? 'Applicants' : 'Recent Applicants'}
+              </h2>
               <Link href="/applicants">
                 <Button variant="ghost" size="sm" icon={ICONS.arrow} iconPosition="right">
-                  View all
+                  {isMobile ? 'All' : 'View all'}
                 </Button>
               </Link>
             </div>
 
             <div>
-              {stats?.recentApplicants?.slice(0, 5).map((applicant, index) => (
+              {stats?.recentApplicants?.slice(0, isMobile ? 3 : 5).map((applicant, index) => (
                 <Link
                   key={applicant.id}
                   href={`/applicants/${applicant.id}`}
@@ -360,27 +422,28 @@ export default function Dashboard() {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    padding: '1rem 1.5rem',
+                    padding: isMobile ? '0.75rem 1rem' : '1rem 1.5rem',
                     textDecoration: 'none',
-                    borderBottom: index < 4 ? '1px solid #f1f5f9' : 'none',
+                    borderBottom: index < (isMobile ? 2 : 4) ? '1px solid #f1f5f9' : 'none',
                     transition: 'background-color 0.15s',
                   }}
                   onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f8fafc')}
                   onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '0.5rem' : '0.75rem', flex: 1, minWidth: 0 }}>
                     <div
                       style={{
-                        width: '40px',
-                        height: '40px',
-                        borderRadius: '10px',
+                        width: isMobile ? '32px' : '40px',
+                        height: isMobile ? '32px' : '40px',
+                        borderRadius: isMobile ? '8px' : '10px',
                         background: `linear-gradient(135deg, hsl(${(applicant.id * 60) % 360}, 70%, 60%) 0%, hsl(${(applicant.id * 60 + 30) % 360}, 70%, 50%) 100%)`,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         color: 'white',
-                        fontSize: '0.875rem',
+                        fontSize: isMobile ? '0.6875rem' : '0.875rem',
                         fontWeight: '600',
+                        flexShrink: 0,
                       }}
                     >
                       {applicant.name
@@ -389,18 +452,30 @@ export default function Dashboard() {
                         .join('')
                         .slice(0, 2)}
                     </div>
-                    <div>
-                      <p style={{ fontWeight: '500', color: '#0f172a', fontSize: '0.875rem', margin: 0 }}>
+                    <div style={{ minWidth: 0 }}>
+                      <p style={{
+                        fontWeight: '500',
+                        color: '#0f172a',
+                        fontSize: isMobile ? '0.8125rem' : '0.875rem',
+                        margin: 0,
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                      }}>
                         {applicant.name}
                       </p>
-                      <p style={{ fontSize: '0.75rem', color: '#64748b', margin: 0 }}>
-                        {applicant.position || applicant.currentCompany || 'Candidate'}
-                      </p>
+                      {!isMobile && (
+                        <p style={{ fontSize: '0.75rem', color: '#64748b', margin: 0 }}>
+                          {applicant.position || applicant.currentCompany || 'Candidate'}
+                        </p>
+                      )}
                     </div>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <StageBadge stage={applicant.status} />
-                    <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{formatDate(applicant.createdAt)}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '0.5rem' : '0.75rem', flexShrink: 0 }}>
+                    <StageBadge stage={applicant.status} compact={isMobile} />
+                    {!isMobile && (
+                      <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{formatDate(applicant.createdAt)}</span>
+                    )}
                   </div>
                 </Link>
               ))}
@@ -416,8 +491,8 @@ export default function Dashboard() {
           </Card>
         </div>
 
-        {/* Right Column - Tasks */}
-        <div>
+        {/* Right Column - Tasks (hidden on mobile) */}
+        <div className="tasks-sidebar">
           <Card>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
               <h2 style={{ fontSize: '1rem', fontWeight: '600', color: '#0f172a' }}>My Tasks</h2>

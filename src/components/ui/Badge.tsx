@@ -85,6 +85,7 @@ export default function Badge({
 interface StageBadgeProps {
   stage: string;
   count?: number;
+  compact?: boolean;
 }
 
 const STAGE_COLORS: Record<string, { bg: string; text: string; border: string }> = {
@@ -96,18 +97,29 @@ const STAGE_COLORS: Record<string, { bg: string; text: string; border: string }>
   rejected: { bg: '#fef2f2', text: '#dc2626', border: '#fecaca' },
 };
 
-export function StageBadge({ stage, count }: StageBadgeProps) {
+// Shorten stage names for compact mode
+const COMPACT_STAGE_NAMES: Record<string, string> = {
+  applied: 'App',
+  screening: 'Scr',
+  interviewing: 'Int',
+  offered: 'Off',
+  hired: 'Hire',
+  rejected: 'Rej',
+};
+
+export function StageBadge({ stage, count, compact = false }: StageBadgeProps) {
   const colors = STAGE_COLORS[stage.toLowerCase()] || STAGE_COLORS.applied;
+  const displayStage = compact ? (COMPACT_STAGE_NAMES[stage.toLowerCase()] || stage) : stage;
 
   return (
     <span
       style={{
         display: 'inline-flex',
         alignItems: 'center',
-        gap: '0.5rem',
-        padding: '0.375rem 0.75rem',
-        borderRadius: '8px',
-        fontSize: '0.8125rem',
+        gap: compact ? '0.25rem' : '0.5rem',
+        padding: compact ? '0.25rem 0.5rem' : '0.375rem 0.75rem',
+        borderRadius: compact ? '6px' : '8px',
+        fontSize: compact ? '0.6875rem' : '0.8125rem',
         fontWeight: '500',
         backgroundColor: colors.bg,
         color: colors.text,
@@ -115,7 +127,7 @@ export function StageBadge({ stage, count }: StageBadgeProps) {
         textTransform: 'capitalize',
       }}
     >
-      {stage}
+      {displayStage}
       {count !== undefined && (
         <span
           style={{

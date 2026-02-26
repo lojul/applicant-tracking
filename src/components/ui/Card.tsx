@@ -63,6 +63,7 @@ interface KPICardProps {
   };
   icon?: ReactNode;
   color?: 'blue' | 'green' | 'amber' | 'purple' | 'rose';
+  compact?: boolean;
 }
 
 const COLOR_MAP = {
@@ -73,27 +74,27 @@ const COLOR_MAP = {
   rose: { bg: '#fff1f2', icon: '#f43f5e', border: '#fecdd3' },
 };
 
-export function KPICard({ title, value, change, icon, color = 'blue' }: KPICardProps) {
+export function KPICard({ title, value, change, icon, color = 'blue', compact = false }: KPICardProps) {
   const colors = COLOR_MAP[color];
 
   return (
-    <Card hover>
+    <Card hover style={compact ? { padding: '0.875rem' } : undefined}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
           <p style={{
-            fontSize: '0.8125rem',
+            fontSize: compact ? '0.6875rem' : '0.8125rem',
             fontWeight: '500',
             color: '#64748b',
-            marginBottom: '0.5rem',
+            marginBottom: compact ? '0.25rem' : '0.5rem',
           }}>
             {title}
           </p>
           <p style={{
-            fontSize: '1.75rem',
+            fontSize: compact ? '1.375rem' : '1.75rem',
             fontWeight: '700',
             color: '#0f172a',
             letterSpacing: '-0.025em',
-            marginBottom: change ? '0.5rem' : 0,
+            marginBottom: change ? (compact ? '0.25rem' : '0.5rem') : 0,
           }}>
             {value}
           </p>
@@ -102,21 +103,21 @@ export function KPICard({ title, value, change, icon, color = 'blue' }: KPICardP
               display: 'flex',
               alignItems: 'center',
               gap: '0.25rem',
-              fontSize: '0.75rem',
+              fontSize: compact ? '0.625rem' : '0.75rem',
               fontWeight: '500',
               color: change.trend === 'up' ? '#22c55e' : change.trend === 'down' ? '#ef4444' : '#64748b',
             }}>
               {change.trend === 'up' && '↑'}
               {change.trend === 'down' && '↓'}
-              {change.value}% from last week
+              {change.value}%{compact ? '' : ' from last week'}
             </div>
           )}
         </div>
         {icon && (
           <div style={{
-            width: '44px',
-            height: '44px',
-            borderRadius: '10px',
+            width: compact ? '36px' : '44px',
+            height: compact ? '36px' : '44px',
+            borderRadius: compact ? '8px' : '10px',
             backgroundColor: colors.bg,
             border: `1px solid ${colors.border}`,
             display: 'flex',
